@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="author" content="Felix CHAN">
+    <title>Vote for best images</title>
+    <link rel="stylesheet" href="/files/css/bootstrap.css">
+    <style>
+body {
+    padding-top: 5rem;
+}
+.starter-template {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+@media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+    }
+}
+.middle-badge {
+    margin-top: 1.5em;
+    margin-right: 1em;
+}
+.votecard{
+    margin: 1.5em;
+}
+.cardheader h1{
+    padding: 1.25rem;
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="#">SnP Staff Forum</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="/voting/vote_panel/">Voting Panel <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/voting/exam1/">All images</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <main role="main" class="container">
+
+        {% if message %}
+        <div class="alert alert-success" role="alert">{{ message }}</div>
+        {% endif %}
+
+        <h1>Input the votes</h1>
+        <div class="text-center">
+            <div class="btn-group" role="group" aria-label="Basic example" id="select_btn">
+                {% for gpinfo in allgpinfo %}
+                <button type="button" class="btn {{ gpinfo.class }}">{{ gpinfo.name }}</button>
+                {%endfor %}
+            </div>
+        </div>
+        
+
+        <form action="/voting/vote_panel/" method="post">
+            <div class="card votecard">
+                <div class="cardheader">
+                    <h1>Voting for <span id="group_id">Nothing</span></h1>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" name="group" value="" id="group_name">
+                        <div class="row">
+                            {% for gpinfo in allgpinfo %}
+                            <div class="col-sm-6 col-lg-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="select_group_{{ gpinfo.id }}" name="group_list[]" value="{{ gpinfo.id }}">
+                                        <label class="custom-control-label" for="select_group_{{ gpinfo.id }}">{{ gpinfo.fullname }}</label>
+                                    </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                </div>
+                <div class="card-footer text-muted"><button type="submit" class="btn btn-secondary" name="submit" id="vote_submit_btn" disabled>Submit</button></div>
+            </div>
+        </form>
+      
+      </main><!-- /.container -->
+      <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
+      <script src="/files/js/bootstrap.min.js"></script>
+      <script src="/files/js/voting.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <h2>Voting result</h2>
+    <div style="float: left; width: 48%; height: 0.9vh;"><div id="result"></div></div>
+    <div style="float: right; width: 48%; height: 0.9vh;"><div id="hmap"></div></div>
+    <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/sankey.js"></script>
+    <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io('http://localhost:5000/ws');
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+        socket.on('new data', function(pkgs){
+            if (bar) {
+                // Update the plot content
+                console.log(pkgs);
+                // bar.series[0].data = pkgs;
+                // bar.render();
+                bar.update({
+                    series: [{
+                name: 'Total votes',
+                data: pkgs.bar
+                }]});
+            }
+
+            if (hmap){
+                hmap.update({
+                    series: [{
+                        data: pkgs.con
+                    }]
+                });
+            }
+
+        });
+
+        var initData = []
+        for (var i = 0; i < 14; i++){
+            initData.push({
+                'name': 'Group '+(i+1),
+                y: 0
+            })
+        }
+        
+
+        $("#result").height(($(window).height() * 0.9));
+        $("#hmap").height(($(window).height() * 0.9));
+        var bar = Highcharts.chart('result', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Popular photo'
+            },
+            xAxis: {
+                type: 'category'
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Total votes',
+                },
+                labels: {
+                    overflow: 'justify'
+                }
+            },
+            tooltip: {
+                valueSuffix: ' votes'
+            },
+            plotOptions: {
+                column: {
+                    dataLabels: {
+                        enabled: true,
+                        style: {
+                            fontSize: '1.5em'
+                        }
+                    }
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                floating: true,
+                borderWidth: 1,
+                backgroundColor:
+                    Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+                shadow: true
+            },
+            credits: {
+                enabled: false
+            },
+            series: [{
+                name: 'Total votes',
+                data: initData
+            }]
+        });
+
+        var hmap = Highcharts.chart('hmap', {
+
+        title: {
+            text: 'Vote dependency'
+        },
+
+        series: [{
+            keys: ['from', 'to', 'weight'],
+            data: [
+                [0, 0, 0]
+            ],
+            type: 'dependencywheel',
+            name: 'Dependency wheel series',
+            dataLabels: {
+                color: '#333',
+                style: {
+                    fontSize: '1.5em'
+                },
+                textPath: {
+                    enabled: true,
+                    attributes: {
+                        dy: 5
+                    }
+                },
+                distance: 10
+            },
+            size: '95%'
+        }]
+
+        });
+
+    </script>
+</body>
+</html>

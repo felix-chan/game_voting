@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# VScode
+.VScode
+
+# Database
+voting_result.db
+
+# Proxy setting for Company
+set_proxy.txt
