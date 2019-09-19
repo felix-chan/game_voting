@@ -14,7 +14,7 @@ if not os.path.isdir('./large'):
 for images in original:
     print("Resize image {}".format(images))
     img = Image.open('./original/{}'.format(images))
-    bigsize = 1600
+    bigsize = 1920
     smallsize = 1024
 
     wpercent_small = (smallsize/float(img.size[0]))
