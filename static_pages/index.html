@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="author" content="Felix CHAN">
+    <title>SnP Group Photo Viewer</title>
+    <link rel="stylesheet" href="/files/css/bootstrap.css">
+    <style>
+        .tophead {
+            margin-top: 5em;
+        }
+        
+        .imagezone img {
+            border: 5px solid #cccccc;
+            margin-bottom: 2em;
+        }
+        
+        #switcher {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Fixed/sticky position */
+            bottom: 1em;
+            /* Place the button at the bottom of the page */
+            right: 1em;
+            /* Place the button 30px from the right */
+            z-index: 99;
+            /* Make sure it does not overlap */
+            border: none;
+            /* Remove borders */
+            outline: none;
+            /* Remove outline */
+            cursor: pointer;
+            /* Add a mouse pointer on hover */
+            padding: 15px;
+            /* Some padding */
+            border-radius: 2em;
+            /* Rounded corners */
+            font-size: 36px;
+            /* Increase font size */
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            line-height: 60px;
+        }
+        
+        #switcher svg {
+            vertical-align: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="#">SnP Staff Forum Group Photo Viewer</a>
+    </nav>
+    <div id="switcher" data-toggle="modal" data-target="#guideModel" class="btn-primary"><i class="fas fa-arrow-right"></i></div>
+    <div class="container tophead" id="imageZone">
+
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="guideModel" tabindex="-1" role="dialog" aria-labelledby="guideModel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Group list</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+                </div>
+                <div class="modal-body">
+                    <ul class="grouplist" id="groupList">
+
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="/files/js/bootstrap.min.js"></script>
+    <script src="https://use.fontawesome.com/releases/v5.10.2/js/all.js" data-auto-replace-svg="nest"></script>
+    <script>
+        //Get the button:
+        mybutton = document.getElementById("switcher");
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function() {
+            scrollFunction()
+        };
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        $(".grouplist a").click(function() {
+            console.log('click');
+            $('#guideModel').modal('hide');
+        })
+
+        var total_img = 4;
+
+        function zfill(num, len) {
+            return (Array(len).join("0") + num).slice(-len);
+        }
+
+        function gen_image(id, url) {
+            var gid = zfill(id, 2);
+            var active = '';
+            if (id == 1) {
+                active = 'active';
+            }
+            var image_txt = `
+        <h1 id="group${gid}">Group ${gid}</h1>
+        <div class="imagezone">
+            <img src="${url}" alt="Group ${gid}" srcset="Group ${gid}" class="img-fluid rounded">
+        </div>
+            `
+
+            $(image_txt).appendTo("#imageZone");
+
+            var group_txt = `<li><a href="#group${gid}">Group ${gid}</a></li>`;
+            $(group_txt).appendTo("#groupList");
+        }
+
+        $(document).ready(function(e) {
+            $.ajax({
+                url: '/files/json/images.json',
+                dataType: 'json'
+            }).done(function(e) {
+                var total_images = e.total_gp;
+                for (var i = 1; i <= total_images; i++) {
+                    var img_url = e.images[i-1]['original'];
+                    if (screen.width <= 1024){
+                        img_url = e.images[i-1]['small'];
+                    }else if(screen.width <= 1920){
+                        img_url = e.images[i-1]['large'];
+                    }
+                    gen_image(i, img_url);
+                }
+
+                $('#carouselExampleCaptions').carousel({
+                    interval: 50000
+                });
+            });
+
+        });
+    </script>
+</body>
+
+
+</html>

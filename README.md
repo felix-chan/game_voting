@@ -6,7 +6,7 @@
  - `/voting/graphs`: Voting result snapshot visuzalization
  - `/voting/vote_panel/`: Page for cast the voting (Password restricted)
  - `/snpstaffforum/`: Group photo viewing page
- - `/snpstaffforum/slider.html/`: Slider version of group photo
+ - `/snpstaffforum/slider/`: Slider version of group photo
  - `/files/*`: All static files include Javascript and CSS files
  - `/files/upload_images/original/`: Original size photo
  - `/files/upload_images/small/`: Small size photo (1024px)

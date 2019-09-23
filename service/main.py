@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, redirect
 from flask import jsonify, g
 from flask_socketio import SocketIO, send, emit
 import pandas as pd
@@ -73,9 +73,9 @@ socketio = SocketIO(app)
 
 @app.route("/", methods=['POST', 'GET'])
 def index():
-    # Show list of users
+    # Redirect to HA homepage
 
-    return 'Hello world!'
+    return redirect("https://www.ha.org.hk", code=302)
 
 @app.route("/voting/graphs", methods=['GET'])
 def show_graphs():
