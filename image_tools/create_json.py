@@ -1,7 +1,7 @@
 import json
 
-total_groups = 11
-base_dir = '../image_tools/'
+total_groups = 5
+base_dir = '/files/upload_images/'
 
 img_list = []
 
@@ -29,5 +29,5 @@ json_object = {
     'images': img_list
 }
 
-with open('./json/images.json', 'w') as file:
+with open('../images/files/json/images.json', 'w') as file:
     file.write(json.dumps(json_object))

@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="author" content="Felix CHAN">
     <title>SnP Group Photo Viewer</title>
-    <link rel="stylesheet" href="./files/css/bootstrap.css">
+    <link rel="stylesheet" href="/files/css/bootstrap.css">
     <style>
         .tophead {
             margin-top: 5em;
@@ -58,16 +58,8 @@
         <a class="navbar-brand" href="#">SnP Staff Forum Group Photo Viewer</a>
     </nav>
     <div id="switcher" data-toggle="modal" data-target="#guideModel" class="btn-primary"><i class="fas fa-arrow-right"></i></div>
-    <div class="container tophead">
-        <h1 id="group01">Group 01</h1>
-        <div class="imagezone">
-            <img src="./upload_images/group01.jpg" alt="Group 01" srcset="Group 01" class="img-fluid rounded">
-        </div>
+    <div class="container tophead" id="imageZone">
 
-        <h1 id="group02">Group 02</h1>
-        <div class="imagezone">
-            <img src="./upload_images/group02.jpg" alt="Group 02" srcset="Group 02" class="img-fluid rounded">
-        </div>
     </div>
     <!-- Modal -->
     <div class="modal fade" id="guideModel" tabindex="-1" role="dialog" aria-labelledby="guideModel" aria-hidden="true">
@@ -80,11 +72,8 @@
               </button>
                 </div>
                 <div class="modal-body">
-                    <ul class="grouplist">
-                        <li><a href="#group01">Group 01</a></li>
-                        <li><a href="#group02">Group 02</a></li>
-                        <li><a href="#group03">Group 03</a></li>
-                        <li><a href="#group04">Group 04</a></li>
+                    <ul class="grouplist" id="groupList">
+
                     </ul>
                 </div>
                 <div class="modal-footer">
@@ -93,8 +82,8 @@
             </div>
         </div>
     </div>
-    <script src="./files/js/jquery-3.3.1.slim.min.js"></script>
-    <script src="./files/js/bootstrap.min.js"></script>
+    <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="/files/js/bootstrap.min.js"></script>
     <script src="https://use.fontawesome.com/releases/v5.10.2/js/all.js" data-auto-replace-svg="nest"></script>
     <script>
         //Get the button:
@@ -117,6 +106,54 @@
             console.log('click');
             $('#guideModel').modal('hide');
         })
+
+        var total_img = 4;
+
+        function zfill(num, len) {
+            return (Array(len).join("0") + num).slice(-len);
+        }
+
+        function gen_image(id, url) {
+            var gid = zfill(id, 2);
+            var active = '';
+            if (id == 1) {
+                active = 'active';
+            }
+            var image_txt = `
+        <h1 id="group${gid}">Group ${gid}</h1>
+        <div class="imagezone">
+            <img src="${url}" alt="Group ${gid}" srcset="Group ${gid}" class="img-fluid rounded">
+        </div>
+            `
+
+            $(image_txt).appendTo("#imageZone");
+
+            var group_txt = `<li><a href="#group${gid}">Group ${gid}</a></li>`;
+            $(group_txt).appendTo("#groupList");
+        }
+
+        $(document).ready(function(e) {
+            $.ajax({
+                url: '/files/json/images.json',
+                dataType: 'json'
+            }).done(function(e) {
+                var total_images = e.total_gp;
+                for (var i = 1; i <= total_images; i++) {
+                    var img_url = e.images[i-1]['original'];
+                    if (screen.width <= 1024){
+                        img_url = e.images[i-1]['small'];
+                    }else if(screen.width <= 1920){
+                        img_url = e.images[i-1]['large'];
+                    }
+                    gen_image(i, img_url);
+                }
+
+                $('#carouselExampleCaptions').carousel({
+                    interval: 50000
+                });
+            });
+
+        });
     </script>
 </body>
 

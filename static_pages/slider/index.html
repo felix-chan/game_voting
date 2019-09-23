@@ -7,8 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="author" content="Felix CHAN">
     <title>Photo sliders</title>
-    <link rel="stylesheet" href="../files/css/bootstrap.css">
-    <link rel="stylesheet" href="../files/css/carousel.css">
+    <link rel="stylesheet" href="/files/css/bootstrap.css">
+    <link rel="stylesheet" href="/files/css/carousel.css">
 </head>
 
 <body>
@@ -34,11 +34,11 @@
     </div>
     <div class="clear"></div>
     <div class="text-right">
-        <div class="col-12 qr-layer">Scan QR code for more photo <img src="./upload_images/qr_code.png" alt="QR Code" height="250px"></div>
+        <div class="col-12 qr-layer">Scan QR code for more photo <img src="/files/upload_images/qr_code.png" alt="QR Code" height="250px"></div>
     </div>
 
-    <script src="../files/js/jquery-3.3.1.slim.min.js"></script>
-    <script src="../files/js/bootstrap.min.js"></script>
+    <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="/files/js/bootstrap.min.js"></script>
     <script src="https://getbootstrap.com/docs/4.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         var total_img = 4;
@@ -59,7 +59,7 @@
                     <div class="carousel-caption d-none d-md-block">
                         <h2>Group ${gid}</h2>
                     </div>
-                    <div class="carousel-img"><img src="./upload_images/group${gid}.jpg" class="d-block" alt="Group ${gid}"></div>
+                    <div class="carousel-img"><img src="${url}" class="d-block" alt="Group ${gid}"></div>
                 </div>
             `
 
