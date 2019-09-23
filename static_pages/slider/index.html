@@ -7,8 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="author" content="Felix CHAN">
     <title>Photo sliders</title>
-    <link rel="stylesheet" href="./files/css/bootstrap.css">
-    <link rel="stylesheet" href="./files/css/carousel.css">
+    <link rel="stylesheet" href="../files/css/bootstrap.css">
+    <link rel="stylesheet" href="../files/css/carousel.css">
 </head>
 
 <body>
@@ -37,19 +37,17 @@
         <div class="col-12 qr-layer">Scan QR code for more photo <img src="./upload_images/qr_code.png" alt="QR Code" height="250px"></div>
     </div>
 
-    <script src="./files/js/jquery-3.3.1.slim.min.js"></script>
-    <script src="./files/js/bootstrap.min.js"></script>
+    <script src="../files/js/jquery-3.3.1.slim.min.js"></script>
+    <script src="../files/js/bootstrap.min.js"></script>
     <script src="https://getbootstrap.com/docs/4.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         var total_img = 4;
-
-
 
         function zfill(num, len) {
             return (Array(len).join("0") + num).slice(-len);
         }
 
-        function gen_image(id) {
+        function gen_image(id, url) {
             var gid = zfill(id, 2);
             var active = '';
             if (id == 1) {
@@ -57,7 +55,7 @@
             }
             var image_txt = `
                 <div class="carousel-item ${active}">
-                    <div class="background-image" style="background-image: url('./upload_images/group${gid}.jpg');"></div>
+                    <div class="background-image" style="background-image: url('${url}');"></div>
                     <div class="carousel-caption d-none d-md-block">
                         <h2>Group ${gid}</h2>
                     </div>
@@ -68,13 +66,28 @@
             $(image_txt).appendTo("#carousel-inner");
         }
 
-        for (var i = 1; i <= total_img; i++) {
-            gen_image(i);
-        }
-        $('#carouselExampleCaptions').carousel({
-            interval: 50000
+        $(document).ready(function(e) {
+            $.ajax({
+                url: '../files/json/images.json',
+                dataType: 'json'
+            }).done(function(e) {
+                var total_images = e.total_gp;
+                for (var i = 1; i <= total_images; i++) {
+                    var img_url = e.images[i-1]['original'];
+                    if (screen.width <= 1024){
+                        img_url = e.images[i-1]['small'];
+                    }else if(screen.width <= 1920){
+                        img_url = e.images[i-1]['large'];
+                    }
+                    gen_image(i, img_url);
+                }
+
+                $('#carouselExampleCaptions').carousel({
+                    interval: 50000
+                });
+            });
+
         });
-        console.log("Run");
     </script>
 </body>
 
