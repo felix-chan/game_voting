@@ -26,20 +26,20 @@ def gen_voting_result():
     conn = get_db()
 
     total_votes = pd.read_sql(
-        '''SELECT vote1 as vote FROM votes 
+        '''SELECT vote1 as vote, 5 as score FROM votes 
 UNION ALL 
-SELECT vote2 as vote FROM votes WHERE vote2 IS NOT NULL 
+SELECT vote2 as vote, 3 as score FROM votes WHERE vote2 IS NOT NULL 
 UNION ALL 
-SELECT vote3 as vote FROM votes WHERE vote3 IS NOT NULL'''.strip(), 
+SELECT vote3 as vote, 1 as score FROM votes WHERE vote3 IS NOT NULL'''.strip(), 
         conn)
 
-    vote_counts = total_votes['vote'].value_counts().reset_index()\
-        .sort_values(['index'])
-    vote_counts = pd.DataFrame({'index': [x+1 for x in range(total_gps)]}).merge(
+    vote_counts = total_votes.groupby(['vote'])['score'].sum().reset_index()\
+        .sort_values(['vote'])
+    vote_counts = pd.DataFrame({'vote': [x+1 for x in range(total_gps)]}).merge(
         vote_counts,
-        on='index',
+        on='vote',
         how='left'
-    ).fillna(0).sort_values(['index'])
+    ).fillna(0).sort_values(['vote'])
     send_vote_counts = [
         {
             'name': 'Group {x}'.format(x=int(x[1][0])),
@@ -47,24 +47,24 @@ SELECT vote3 as vote FROM votes WHERE vote3 IS NOT NULL'''.strip(),
         } for x in vote_counts.iterrows()
     ]
 
-    votes_connection = pd.read_sql("""
-SELECT vote1, vote2 FROM votes WHERE vote2 IS NOT NULL
-UNION ALL
-SELECT vote2 as vote1, vote3 as vote2 FROM votes WHERE vote3 IS NOT NULL
-UNION ALL
-SELECT vote1, vote3 as vote2 FROM votes WHERE vote3 IS NOT NULL
-UNION ALL
-SELECT vote1, vote1 as vote2 FROM votes WHERE vote2 IS NULL
-""", conn)
+    last_vote = pd.read_sql('''
+SELECT * FROM votes
+ORDER BY datetime DESC
+LIMIT 1
+    '''.strip(), conn)
 
-    votes_connection['count'] = 1
-    votes_con = votes_connection.groupby(['vote1', 'vote2'])['count'].count()\
-        .reset_index()
+    last_vote_list = []
+    for i, rows in last_vote.iterrows():
+        last_vote_list.append(rows['vote1'])
+        if rows['vote2']:
+            last_vote_list.append(rows['vote2'])
+        if rows['vote3']:
+            last_vote_list.append(rows['vote3'])
 
-    send_vote_con = [[int(x['vote1']), int(x['vote2']), int(x['count'])] 
-        for y, x in votes_con.iterrows()]
-
-    return send_vote_counts, send_vote_con
+    return send_vote_counts, {
+        'group_id': last_vote['group_name'].values[0],
+        'votes': last_vote_list
+    }
 
 
 app = Flask(__name__)
@@ -88,20 +88,33 @@ def postform():
     current_db = get_db()
     if request.method == 'POST':
         # Search for result
-        selected_gps = request.form.getlist('group_list[]')
+        selected_gps = []
+        for gid in range(total_gps):
+            g_name = 'group_list_{id}'.format(id=(gid + 1))
+            group_option = request.form[g_name] if g_name in request.form else ''
+            if group_option != '':
+                selected_gps.append({
+                    'group_id': (gid + 1), 
+                    'option': int(group_option)
+                })
         post_gp = request.form['group']
         print(selected_gps)
         if (len(selected_gps) < 4) and \
             (len(selected_gps) > 0):
             # Insert into db
+            selected_gps_df = pd.DataFrame(selected_gps)
             total_votes = []
             cur = current_db.cursor()
             
             post_group_id = post_gp.replace('Group ', '').strip()
-            second_choice = selected_gps[1] if len(selected_gps) > 1 else None
-            third_choice = selected_gps[2] if len(selected_gps) > 2 else None
-            total_votes.append((datetime.now(), post_group_id, selected_gps[0], 
+            first_choice = int(selected_gps_df[selected_gps_df.option == 1]['group_id'].values[0])
+            second_choice = int(selected_gps_df[selected_gps_df.option == 2]['group_id'].values[0]) \
+                if len(selected_gps) > 1 else None
+            third_choice = int(selected_gps_df[selected_gps_df.option == 3]['group_id'].values[0]) \
+                if len(selected_gps) > 2 else None
+            total_votes.append((datetime.now(), post_group_id, first_choice, 
                 second_choice, third_choice))
+            print(total_votes)
 
             cur.executemany('INSERT INTO votes VALUES (?,?,?,?,?)', total_votes)
             post_message = 'Successfully voted for {x}'.format(
@@ -121,11 +134,11 @@ def postform():
                 else 'btn-primary'
         })
 
-    new_data, new_conn = gen_voting_result()
+    new_data, last_vote = gen_voting_result()
     
     socketio.emit('new data', {
         'bar': new_data,
-        'con': new_conn
+        'last_vote': last_vote
     }, namespace='/ws')
 
     return render_template('vote.html',
@@ -140,11 +153,11 @@ def send_js(path):
 @app.route('/send', methods=['GET'])
 def sending():
 
-    new_data, new_conn = gen_voting_result()
+    new_data, last_vote = gen_voting_result()
     
     socketio.emit('new data', {
         'bar': new_data,
-        'con': new_conn
+        'last_vote': last_vote
     }, namespace='/ws')
     print('Emit new data')
     return 'sent'
@@ -152,10 +165,10 @@ def sending():
 @socketio.on('my event', namespace='/ws')
 def handle_message(message):
     print('received message: ' + str(message))
-    new_data, new_conn = gen_voting_result()
+    new_data, last_vote = gen_voting_result()
     emit('new data', {
         'bar': new_data,
-        'con': new_conn
+        'last_vote': last_vote
     }, namespace='/ws')
 
 @app.teardown_appcontext

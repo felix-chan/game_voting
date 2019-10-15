@@ -16,7 +16,12 @@
     <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
+        function change_group(ch_list){
+            console.log(ch_list);
+        }
+
         var socket = io('http://localhost:5000/ws');
+        var last_voter = '';
         socket.on('connect', function() {
             socket.emit('my event', {data: 'I\'m connected!'});
         });
@@ -33,12 +38,11 @@
                 }]});
             }
 
-            if (hmap){
-                hmap.update({
-                    series: [{
-                        data: pkgs.con
-                    }]
-                });
+            if(pkgs.last_vote){
+                if (last_voter != pkgs.last_vote.group_id){
+                    change_group(pkgs.last_vote.votes);
+                    last_voter = pkgs.last_vote.group_id;
+                }
             }
 
         });
@@ -105,36 +109,7 @@
             }]
         });
 
-        var hmap = Highcharts.chart('hmap', {
-
-        title: {
-            text: 'Vote dependency'
-        },
-
-        series: [{
-            keys: ['from', 'to', 'weight'],
-            data: [
-                [0, 0, 0]
-            ],
-            type: 'dependencywheel',
-            name: 'Dependency wheel series',
-            dataLabels: {
-                color: '#333',
-                style: {
-                    fontSize: '1.5em'
-                },
-                textPath: {
-                    enabled: true,
-                    attributes: {
-                        dy: 5
-                    }
-                },
-                distance: 10
-            },
-            size: '95%'
-        }]
-
-        });
+        
 
     </script>
 </body>
