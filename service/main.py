@@ -11,7 +11,7 @@ import random
 # logging.basicConfig(level=logging.INFO)
 
 # Setting parameters
-total_gps = 14
+total_gps = 15
 DATABASE = 'voting_result.db'
 
 # Global functions
@@ -42,7 +42,7 @@ SELECT vote3 as vote, 1 as score FROM votes WHERE vote3 IS NOT NULL'''.strip(),
     ).fillna(0).sort_values(['vote'])
     send_vote_counts = [
         {
-            'name': 'Group {x}'.format(x=int(x[1][0])),
+            'name': 'Table {x}'.format(x=int(x[1][0])),
             'y': int(x[1][1])
         } for x in vote_counts.iterrows()
     ]
@@ -62,7 +62,8 @@ LIMIT 1
             last_vote_list.append(rows['vote3'])
 
     return send_vote_counts, {
-        'group_id': last_vote['group_name'].values[0],
+        'group_id': last_vote['group_name'].values[0] \
+            if len(last_vote['group_name'].values) > 0 else 0,
         'votes': last_vote_list
     }
 

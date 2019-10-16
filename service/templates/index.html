@@ -4,20 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>SnP Voting Result</title>
+    <style>
+.vote_ball{
+    width: 26%;
+    margin: 2%;
+    background-color: #70cbff;
+    color: #000000;
+    border-radius: 50%;
+    display: inline-block;
+    text-align: center;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+.vote_ball > span {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.bg {
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s linear;
+}
+.bg::before, .bg::after {
+    position: absolute;
+    top: -12.5%;
+    left: -12.5%;
+    display: block;
+    border: 4px solid #aaa;
+    width: 125%;
+    height: 125%;
+    border-radius: 50%;
+    box-sizing: border-box;
+    content: "";
+    transform: scale(0.8);
+    opacity: 0;
+}
+
+.move::before, .move::after {
+    animation: wave 1s ease-in-out;
+    -webkit-animation: wave 1s ease-in-out;
+} 
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes wave {
+    10% {opacity: 0.3}
+    100% {transform: scale(1); opacity: 0}
+}
+
+@keyframes wave {
+    10% {opacity: 0.3}
+    100% {transform: scale(1); opacity: 0}
+}
+    </style>
 </head>
 <body>
     <h2>Voting result</h2>
     <div style="float: left; width: 48%; height: 0.9vh;"><div id="result"></div></div>
-    <div style="float: right; width: 48%; height: 0.9vh;"><div id="hmap"></div></div>
+    <div style="float: right; width: 48%; height: 0.9vh; padding-top: 5em;"><div id="hmap"></div></div>
     <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/sankey.js"></script>
     <script src="https://code.highcharts.com/modules/dependency-wheel.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
-        function change_group(ch_list){
-            console.log(ch_list);
+        var time_worker = null;
+        function ball_height(){
+            var width = $(".vote_ball:first").width()
+            $(".vote_ball").height(width);
+            $(".vote_ball").css({'line-height': width+'px'});
+            $(".vote_ball").css({'font-size': (width * 0.6)+'px'});
+            $(".bg").addClass('move');
+        }
+
+        function change_group(ch_list, clear=false){
+            if (clear){
+                $("#hmap").html('');
+                clearTimeout(time_worker);
+            }
+            var first = ch_list.shift();
+
+            $("#hmap").append(
+                '<div class="vote_ball"><span class="bg">'+first+'</span></div>'
+            );
+            ball_height();
+            if (ch_list.length > 0){
+                time_worker = setTimeout(function(e){
+                    change_group(ch_list)
+                }, 500);
+            }
         }
 
         var socket = io('http://localhost:5000/ws');
@@ -28,9 +105,6 @@
         socket.on('new data', function(pkgs){
             if (bar) {
                 // Update the plot content
-                console.log(pkgs);
-                // bar.series[0].data = pkgs;
-                // bar.render();
                 bar.update({
                     series: [{
                 name: 'Total votes',
@@ -40,8 +114,10 @@
 
             if(pkgs.last_vote){
                 if (last_voter != pkgs.last_vote.group_id){
-                    change_group(pkgs.last_vote.votes);
-                    last_voter = pkgs.last_vote.group_id;
+                    if (pkgs.last_vote.votes.length > 0){
+                        change_group(pkgs.last_vote.votes, true);
+                        last_voter = pkgs.last_vote.group_id;
+                    }
                 }
             }
 
