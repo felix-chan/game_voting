@@ -113,22 +113,22 @@
             return (Array(len).join("0") + num).slice(-len);
         }
 
-        function gen_image(id, url) {
+        function gen_image(id, url, link="#") {
             var gid = zfill(id, 2);
             var active = '';
             if (id == 1) {
                 active = 'active';
             }
             var image_txt = `
-        <h1 id="group${gid}">Group ${gid}</h1>
+        <h1 id="group${gid}">Table ${gid}</h1>
         <div class="imagezone">
-            <img src="${url}" alt="Group ${gid}" srcset="Group ${gid}" class="img-fluid rounded">
+            <a href="${link}"><img src="${url}" alt="Group ${gid}" srcset="Group ${gid}" class="img-fluid rounded"></a>
         </div>
             `
 
             $(image_txt).appendTo("#imageZone");
 
-            var group_txt = `<li><a href="#group${gid}">Group ${gid}</a></li>`;
+            var group_txt = `<li><a href="#group${gid}">Table ${gid}</a></li>`;
             $(group_txt).appendTo("#groupList");
         }
 
@@ -145,7 +145,7 @@
                     }else if(screen.width <= 1920){
                         img_url = e.images[i-1]['large'];
                     }
-                    gen_image(i, img_url);
+                    gen_image(i, img_url, e.images[i-1]['large']);
                 }
 
                 $('#carouselExampleCaptions').carousel({
