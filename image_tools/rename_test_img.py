@@ -2,7 +2,7 @@ import os, re
 
 # List out all images
 original = os.listdir('./original')
-
+original.sort()
 
 # Rename
 i = 1
