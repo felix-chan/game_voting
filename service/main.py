@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, send_from_directory, redirect
-from flask import jsonify, g
+from flask import jsonify, g, url_for
+from werkzeug.utils import secure_filename
 from flask_socketio import SocketIO, send, emit
 import pandas as pd
 import numpy as np
 import logging
 import sqlite3
+import os
 from datetime import datetime
 
 import random
@@ -13,6 +15,26 @@ import random
 # Setting parameters
 total_gps = 16
 DATABASE = 'voting_result.db'
+UPLOAD_FOLDER = '../image_tools/upload_image'
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
+GROUP_KEY_PAIRS = {
+    '2846CAC71F': 'group01.jpg',
+	'978A8FED4C': 'group02.jpg',
+	'B125E677F4': 'group03.jpg',
+	'4D4F79E101': 'group04.jpg',
+	'BF835C8991': 'group05.jpg',
+	'933AF2A0F2': 'group06.jpg',
+	'13E3236A83': 'group07.jpg',
+	'EBDBA6608A': 'group08.jpg',
+	'65F933EF62': 'group09.jpg',
+	'B0943812D6': 'group10.jpg',
+	'01FBEB60EB': 'group11.jpg',
+	'68D61DD646': 'group12.jpg',
+	'ECE6999387': 'group13.jpg',
+	'96325F0A1D': 'group14.jpg',
+	'97FD18D0B4': 'group15.jpg',
+	'A0D45620DB': 'group16.jpg'
+}
 
 # Global functions
 def get_db():
@@ -72,9 +94,13 @@ LIMIT 1
         'votes': last_vote_list
     }, top3_vote_list
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hasnp'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 socketio = SocketIO(app)
 
 @app.route("/", methods=['POST', 'GET'])
@@ -169,6 +195,35 @@ def sending():
     }, namespace='/ws')
     print('Emit new data')
     return 'sent'
+
+@app.route('/submit_gpimg/<key>/', methods=['GET', 'POST'])
+def submit_img(key):
+    post_message = ''
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            post_message = 'No file part'
+            
+        file = request.files['file']
+        # Check if filename exists
+        if file.filename == '':
+            post_message = 'No selected file'
+            
+        if file and allowed_file(file.filename):
+            # filename = secure_filename(file.filename)
+            
+            if key in GROUP_KEY_PAIRS:
+                filename = GROUP_KEY_PAIRS[key]
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                return redirect('/snpstaffforum/success.html')
+            else:
+                post_message = 'Invalid key'
+        else:
+            post_message = 'Not allowed image type'
+
+    return render_template('upload.html',
+        input_key=key,
+        message=post_message)
 
 @socketio.on('my event', namespace='/ws')
 def handle_message(message):
