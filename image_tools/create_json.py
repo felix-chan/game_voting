@@ -1,6 +1,6 @@
 import json
 
-total_groups = 5
+total_groups = 9
 base_dir = '/files/upload_images/'
 
 img_list = []
@@ -10,7 +10,7 @@ for i in range(total_groups):
     img_list.append({
 
         'name': 'Group {}'.format(group_id),
-        'full': '{dir}original/group{id:02d}.jpg'.format(
+        'full': '{dir}large/group{id:02d}.jpg'.format(
             dir=base_dir,
             id=group_id
         ),
@@ -29,5 +29,5 @@ json_object = {
     'images': img_list
 }
 
-with open('../images/files/json/images.json', 'w') as file:
+with open('../service/files/json/images.json', 'w') as file:
     file.write(json.dumps(json_object))

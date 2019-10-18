@@ -7,7 +7,7 @@ original.sort()
 # Rename
 i = 1
 for images in original:
-    if re.search('\\.jpg', images.lower()):
+    if not re.search('^\\.', images.lower()):
         new_file_name = './original/group{:02d}.jpg'.format(i)
         print('Renaming {x1} to {x2}'.format(
             x1=images,

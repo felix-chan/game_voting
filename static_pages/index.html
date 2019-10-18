@@ -133,8 +133,9 @@
         }
 
         $(document).ready(function(e) {
+            var rand_seed = Math.floor(Math.random() * 10000);
             $.ajax({
-                url: '/files/json/images.json',
+                url: ('/files/json/images.json?rd='+rand_seed),
                 dataType: 'json'
             }).done(function(e) {
                 var total_images = e.total_gp;
