@@ -11,7 +11,7 @@ import random
 # logging.basicConfig(level=logging.INFO)
 
 # Setting parameters
-total_gps = 15
+total_gps = 16
 DATABASE = 'voting_result.db'
 
 # Global functions
@@ -47,6 +47,11 @@ SELECT vote3 as vote, 1 as score FROM votes WHERE vote3 IS NOT NULL'''.strip(),
         } for x in vote_counts.iterrows()
     ]
 
+    # Calculate the top 3 groups
+    top3_votes = vote_counts.sort_values(['score'], ascending=[False])\
+        ['vote'].head(3)
+    top3_vote_list = [int(x) for x in top3_votes.values]
+
     last_vote = pd.read_sql('''
 SELECT * FROM votes
 ORDER BY datetime DESC
@@ -65,7 +70,7 @@ LIMIT 1
         'group_id': last_vote['group_name'].values[0] \
             if len(last_vote['group_name'].values) > 0 else 0,
         'votes': last_vote_list
-    }
+    }, top3_vote_list
 
 
 app = Flask(__name__)
@@ -135,11 +140,12 @@ def postform():
                 else 'btn-primary'
         })
 
-    new_data, last_vote = gen_voting_result()
+    new_data, last_vote, top3 = gen_voting_result()
     
     socketio.emit('new data', {
         'bar': new_data,
-        'last_vote': last_vote
+        'last_vote': last_vote,
+        'top3': top3
     }, namespace='/ws')
 
     return render_template('vote.html',
@@ -154,11 +160,12 @@ def send_js(path):
 @app.route('/send', methods=['GET'])
 def sending():
 
-    new_data, last_vote = gen_voting_result()
+    new_data, last_vote, top3 = gen_voting_result()
     
     socketio.emit('new data', {
         'bar': new_data,
-        'last_vote': last_vote
+        'last_vote': last_vote,
+        'top3': top3
     }, namespace='/ws')
     print('Emit new data')
     return 'sent'
@@ -166,10 +173,11 @@ def sending():
 @socketio.on('my event', namespace='/ws')
 def handle_message(message):
     print('received message: ' + str(message))
-    new_data, last_vote = gen_voting_result()
+    new_data, last_vote, top3 = gen_voting_result()
     emit('new data', {
         'bar': new_data,
-        'last_vote': last_vote
+        'last_vote': last_vote,
+        'top3': top3
     }, namespace='/ws')
 
 @app.teardown_appcontext

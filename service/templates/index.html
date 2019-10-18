@@ -6,6 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>SnP Voting Result</title>
     <style>
+body {
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+}
 .vote_ball{
     width: 26%;
     margin: 2%;
@@ -62,8 +65,13 @@
 </head>
 <body>
     <h2>Voting result</h2>
-    <div style="float: left; width: 48%; height: 0.9vh;"><div id="result"></div></div>
-    <div style="float: right; width: 48%; height: 0.9vh; padding-top: 5em;"><div id="hmap"></div></div>
+    <div style="float: left; width: 58%; height: 0.9vh;"><div id="result"></div></div>
+    <div style="float: right; width: 38%; height: 0.9vh; padding-top: 1em;">
+        <h3>Current Vote</h3>
+        <div id="hmap"></div>
+        <h3>Top 3</h3>
+        <div id="top3"></div>
+    </div>
     <script src="/files/js/jquery-3.3.1.slim.min.js"></script>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/sankey.js"></script>
@@ -71,6 +79,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
         var time_worker = null;
+        var time_worker2 = null;
         function ball_height(){
             var width = $(".vote_ball:first").width()
             $(".vote_ball").height(width);
@@ -97,7 +106,25 @@
             }
         }
 
-        var socket = io('http://localhost:5000/ws');
+        function top3(ch_list, clear=false){
+            if (clear){
+                $("#top3").html('');
+                clearTimeout(time_worker2);
+            }
+            var first = ch_list.shift();
+
+            $("#top3").append(
+                '<div class="vote_ball"><span class="bg">'+first+'</span></div>'
+            );
+            ball_height();
+            if (ch_list.length > 0){
+                time_worker2 = setTimeout(function(e){
+                    top3(ch_list)
+                }, 500);
+            }
+        }
+
+        var socket = io('/ws');
         var last_voter = '';
         socket.on('connect', function() {
             socket.emit('my event', {data: 'I\'m connected!'});
@@ -118,6 +145,10 @@
                         change_group(pkgs.last_vote.votes, true);
                         last_voter = pkgs.last_vote.group_id;
                     }
+                    if (pkgs.top3.length > 0){
+                        console.log(pkgs.top3);
+                        top3(pkgs.top3, true);
+                    }
                 }
             }
 
@@ -133,7 +164,6 @@
         
 
         $("#result").height(($(window).height() * 0.9));
-        $("#hmap").height(($(window).height() * 0.9));
         var bar = Highcharts.chart('result', {
             chart: {
                 type: 'column'
@@ -142,19 +172,33 @@
                 text: 'Popular photo'
             },
             xAxis: {
-                type: 'category'
+                type: 'category',
+                labels: {
+                    style: {
+                        fontSize: '1.5em',
+                        color: '#333333'
+                    }
+                }
             },
             yAxis: {
                 min: 0,
                 title: {
-                    text: 'Total votes',
+                    text: 'Total scores',
+                    style: {
+                        fontSize: '1.5em',
+                        color: '#333333'
+                    }
                 },
                 labels: {
-                    overflow: 'justify'
+                    overflow: 'justify',
+                    style: {
+                        fontSize: '1.5em',
+                        color: '#333333'
+                    }
                 }
             },
             tooltip: {
-                valueSuffix: ' votes'
+                valueSuffix: ' score'
             },
             plotOptions: {
                 column: {
@@ -180,7 +224,7 @@
                 enabled: false
             },
             series: [{
-                name: 'Total votes',
+                name: 'Total scores',
                 data: initData
             }]
         });
