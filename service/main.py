@@ -18,22 +18,22 @@ DATABASE = 'voting_result.db'
 UPLOAD_FOLDER = '../image_tools/upload_image'
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
 GROUP_KEY_PAIRS = {
-    '2846CAC71F': 'group01.jpg',
-	'978A8FED4C': 'group02.jpg',
-	'B125E677F4': 'group03.jpg',
-	'4D4F79E101': 'group04.jpg',
-	'BF835C8991': 'group05.jpg',
-	'933AF2A0F2': 'group06.jpg',
-	'13E3236A83': 'group07.jpg',
-	'EBDBA6608A': 'group08.jpg',
-	'65F933EF62': 'group09.jpg',
-	'B0943812D6': 'group10.jpg',
-	'01FBEB60EB': 'group11.jpg',
-	'68D61DD646': 'group12.jpg',
-	'ECE6999387': 'group13.jpg',
-	'96325F0A1D': 'group14.jpg',
-	'97FD18D0B4': 'group15.jpg',
-	'A0D45620DB': 'group16.jpg'
+    "B67D471215": "group01.jpg",
+    "DA07CF39C2": "group02.jpg",
+    "36FA5804C1": "group03.jpg",
+    "D5B0B663A9": "group04.jpg",
+    "727BC58BD0": "group05.jpg",
+    "A287747AB6": "group06.jpg",
+    "8364EE91E1": "group07.jpg",
+    "5024546DA0": "group08.jpg",
+    "692E9498F9": "group09.jpg",
+    "1BE2DBEC4D": "group10.jpg",
+    "24B00A6A6A": "group11.jpg",
+    "7A9A38D15C": "group12.jpg",
+    "A5E7120C5A": "group13.jpg",
+    "14BDEAD2C2": "group14.jpg",
+    "1A61A73EA8": "group15.jpg",
+    "D80F240CDF": "group16.jpg"
 }
 
 # Global functions
@@ -97,6 +97,17 @@ LIMIT 1
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def submit_log(old_file, new_file, key, msg, ua):
+    current_db = get_db()
+    cur = current_db.cursor()
+            
+    submit_his = []
+    submit_his.append((datetime.now(), old_file, new_file, 
+        key, msg, ua))
+
+    cur.executemany('INSERT INTO submit_log VALUES (?,?,?,?,?,?)', submit_his)
+    current_db.commit()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hasnp'
@@ -199,27 +210,33 @@ def sending():
 @app.route('/submit_gpimg/<key>/', methods=['GET', 'POST'])
 def submit_img(key):
     post_message = ''
+    ua = request.headers.get('User-Agent')
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
             post_message = 'No file part'
-            
-        file = request.files['file']
-        # Check if filename exists
-        if file.filename == '':
-            post_message = 'No selected file'
-            
-        if file and allowed_file(file.filename):
-            # filename = secure_filename(file.filename)
-            
-            if key in GROUP_KEY_PAIRS:
-                filename = GROUP_KEY_PAIRS[key]
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                return redirect('/snpstaffforum/success.html')
-            else:
-                post_message = 'Invalid key'
+
+            submit_log('', '', key, post_message, ua)
         else:
-            post_message = 'Not allowed image type'
+            file = request.files['file']
+            # Check if filename exists
+            if file.filename == '':
+                post_message = 'No selected file'
+                
+            if file and allowed_file(file.filename):
+                # filename = secure_filename(file.filename)
+                
+                if key in GROUP_KEY_PAIRS:
+                    filename = GROUP_KEY_PAIRS[key]
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    submit_log(file.filename, filename, key, 'Success', ua)
+                    return redirect('/snpstaffforum/success.html')
+                else:
+                    post_message = 'Invalid key'
+            else:
+                post_message = 'Not allowed image type'
+            
+            submit_log(file.filename, '', key, post_message, ua)
 
     return render_template('upload.html',
         input_key=key,

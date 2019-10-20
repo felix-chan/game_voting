@@ -16,4 +16,13 @@ CREATE TABLE votes
 
 conn.commit()
 
+c.execute(
+    '''
+CREATE TABLE submit_log
+(datetime TEXT, original_file_name TEXT, final_file_name TEXT, key TEXT, message TEXT, ua TEXT)
+    '''.strip()
+)
+
+conn.commit()
+
 conn.close()
